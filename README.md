@@ -2,7 +2,7 @@
 
 ```bash
 npm install
-npm start
+npm dev
 ```
 
 # Running on Heroku
