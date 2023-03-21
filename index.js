@@ -1,57 +1,17 @@
-const WebSocket = require("ws");
+const webSocket = require("ws");
 
-const server = new WebSocket.Server(
-  {
-    port: 80,
-  },
-  () => {
-    console.log("Server started on port 8080");
-  }
-);
+const server = new webSocket.Server({ port: "8080" });
 
-const users = new Set();
+server.on("connection", (socket) => {
+  console.log("Client connected");
 
-function sendMessage(message) {
-  users.forEach((user) => {
-    user.ws.send(JSON.stringify(message));
-  });
-}
-
-server.on("connection", (ws) => {
-  const userRef = {
-    ws,
-  };
-  users.add(userRef);
-
-  ws.on("message", (message) => {
-    console.log(message);
-    try {
-      // Parsing the message
-      const data = JSON.parse(message);
-
-      // Checking if the message is a valid one
-
-      if (typeof data.sender !== "string" || typeof data.body !== "string") {
-        console.error("Invalid message");
-        return;
-      }
-
-      // Sending the message
-
-      const messageToSend = {
-        sender: data.sender,
-        body: data.body,
-        sentAt: Date.now(),
-      };
-
-      sendMessage(messageToSend);
-    } catch (e) {
-      console.error("Error passing message!", e);
-    }
+  socket.on("message", (message) => {
+    socket.send(`We received your ${message}`);
   });
 
-  ws.on("close", (code, reason) => {
-    users.delete(userRef);
-    console.log(`Connection closed: ${code} ${reason}!`);
+  socket.on("close", (event) => {
+    console.log("Client disconnected");
   });
 });
+
+console.log("socket initialized on port 8080");
