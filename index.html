@@ -19,11 +19,19 @@
 
     <script>
       var host = location.origin.replace(/^http/, "ws");
-      var ws = new WebSocket(host);
-      ws.onmessage = function (event) {
+
+      var sk = new WebSocket(host);
+
+      console.log("Connecting to " + host);
+      console.log("ws to " + sk);
+
+      sk.onmessage = function (event) {
+        console.log(event.data);
+
+        var pings = document.getElementById("pings");
         var li = document.createElement("li");
-        li.innerHTML = JSON.parse(event.data);
-        document.querySelector("#pings").appendChild(li);
+        li.innerHTML = event.data;
+        pings.appendChild(li);
       };
     </script>
   </head>
