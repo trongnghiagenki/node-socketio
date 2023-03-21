@@ -1,31 +1,57 @@
-const app = require("express")();
-const http = require("http").createServer(app);
-const io = require("socket.io")(http);
+const WebSocket = require("ws");
 
-app.get("/", (req, res) => {
-  res.send("Node Server is running...");
-});
+const server = new WebSocket.Server(
+  {
+    port: 80,
+  },
+  () => {
+    console.log("Server started on port 8080");
+  }
+);
 
-io.on("connection", (socket) => {
-  //Get the chatID of the user and join in a room of the same chatID
-  chatID = socket.handshake.query.chatID;
-  socket.join(chatID);
-  //Leave the room if the user closes the socket
-  socket.on("disconnect", () => {
-    socket.leave(chatID);
+const users = new Set();
+
+function sendMessage(message) {
+  users.forEach((user) => {
+    user.ws.send(JSON.stringify(message));
   });
-  //Send message to only a particular user
-  socket.on("send_message", (message) => {
-    receiverChatID = message.receiverChatID;
-    senderChatID = message.senderChatID;
-    content = message.content;
-    //Send message to only that particular room
-    socket.in(receiverChatID).emit("receive_message", {
-      content: content,
-      senderChatID: senderChatID,
-      receiverChatID: receiverChatID,
-    });
+}
+
+server.on("connection", (ws) => {
+  const userRef = {
+    ws,
+  };
+  users.add(userRef);
+
+  ws.on("message", (message) => {
+    console.log(message);
+    try {
+      // Parsing the message
+      const data = JSON.parse(message);
+
+      // Checking if the message is a valid one
+
+      if (typeof data.sender !== "string" || typeof data.body !== "string") {
+        console.error("Invalid message");
+        return;
+      }
+
+      // Sending the message
+
+      const messageToSend = {
+        sender: data.sender,
+        body: data.body,
+        sentAt: Date.now(),
+      };
+
+      sendMessage(messageToSend);
+    } catch (e) {
+      console.error("Error passing message!", e);
+    }
+  });
+
+  ws.on("close", (code, reason) => {
+    users.delete(userRef);
+    console.log(`Connection closed: ${code} ${reason}!`);
   });
 });
-
-http.listen(process.env.PORT);
