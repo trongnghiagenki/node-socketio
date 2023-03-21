@@ -17,10 +17,10 @@ console.log("websocket server created");
 wss.on("connection", function (ws) {
   console.log("websocket connection open");
 
-  ws.on("message", function (message) {
-    console.log("received: %s", message);
-
-    ws.send("someone sent " + message);
+  ws.on("message", (message) => {
+    wss.clients.forEach((client) => {
+      client.send(`${message}`);
+    });
   });
 
   ws.on("close", function () {
